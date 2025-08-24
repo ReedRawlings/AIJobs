@@ -12,10 +12,12 @@ import argparse
 from datetime import datetime, date
 from typing import List
 
-from config.companies import get_company_configs, get_companies_by_source
+from config.companies import get_company_configs
 from scrapers.base_scraper import ScraperRegistry
 from scrapers.greenhouse_scraper import GreenhouseScraper
 from scrapers.lever_scraper import LeverScraper
+from scrapers.workday_scraper import WorkdayScraper
+from scrapers.ashby_scraper import AshbyScraper
 from schemas.job_schema import JobPosting, JobSource
 from schemas.change_tracker import ChangeTracker, OutputGenerator
 
@@ -59,6 +61,26 @@ def create_scrapers_for_companies() -> ScraperRegistry:
                 )
                 registry.register(scraper)
                 logging.info(f"Created Lever scraper for {company.display_name}")
+
+            elif company.source == JobSource.WORKDAY:
+                scraper = WorkdayScraper(
+                    company_name=company.name,
+                    company_display_name=company.display_name,
+                    base_url=company.base_url,
+                    job_board_url=company.job_board_url,
+                    company_id=company.additional_config.get("company_id", company.name),
+                )
+                registry.register(scraper)
+                logging.info(f"Created Workday scraper for {company.display_name}")
+
+            elif company.source == JobSource.ASHBY:
+                scraper = AshbyScraper(
+                    company_name=company.name,
+                    company_display_name=company.display_name,
+                    job_board_url=company.job_board_url,
+                )
+                registry.register(scraper)
+                logging.info(f"Created Ashby scraper for {company.display_name}")
 
             else:
                 logging.warning(f"No scraper available for {company.source.value} platform")
