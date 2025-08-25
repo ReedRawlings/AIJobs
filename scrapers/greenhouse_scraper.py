@@ -50,13 +50,13 @@ class GreenhouseScraper(BaseScraper):
         jobs = []
 
         try:
-            # First, get the list of all jobs
+            # Get all jobs in a single API call - no need for individual job calls
             jobs_data = await self._get_jobs_list()
 
-            # Then get detailed information for each job
+            # Parse each job from the data we already have
             for job_data in jobs_data:
                 try:
-                    job_posting = await self._parse_job_data(job_data)
+                    job_posting = self._parse_job_data(job_data)
                     if job_posting:
                         jobs.append(job_posting)
                 except Exception as e:
@@ -104,7 +104,7 @@ class GreenhouseScraper(BaseScraper):
             self.logger.warning(f"Failed to fetch job details for {job_id}: {e}")
             raise
 
-    async def _parse_job_data(self, job_data: Dict[str, Any]) -> Optional[JobPosting]:
+    def _parse_job_data(self, job_data: Dict[str, Any]) -> Optional[JobPosting]:
         """
         Parse raw Greenhouse job data into normalized JobPosting object.
 
@@ -115,10 +115,7 @@ class GreenhouseScraper(BaseScraper):
             Normalized JobPosting object or None if parsing fails
         """
         try:
-            # Get detailed job information
-            job_details = await self._get_job_details(job_data['id'])
-
-            # Extract basic information
+            # Extract basic information from the data we already have
             external_id = str(job_data['id'])
             title = self.normalize_text(job_data.get('title', ''))
 
@@ -133,47 +130,23 @@ class GreenhouseScraper(BaseScraper):
 
             # Extract location information
             location = None
-            locations = job_data.get('location', {}).get('name')
-            if locations:
-                location = self.normalize_text(locations)
+            locations = job_data.get('location', {})
+            if isinstance(locations, dict) and 'name' in locations:
+                location = self.normalize_text(locations['name'])
+            elif isinstance(locations, list) and len(locations) > 0:
+                location = self.normalize_text(locations[0].get('name', ''))
 
             # Extract employment type
             employment_type = None
             if 'employment_type' in job_data:
                 employment_type = self.normalize_text(job_data['employment_type'])
 
-            # Build job URL
-            job_url = f"https://boards.greenhouse.io/{self.board_id}/jobs/{external_id}"
+            # Build job URL - use the absolute_url if available, otherwise construct it
+            job_url = job_data.get('absolute_url')
+            if not job_url:
+                job_url = f"https://boards.greenhouse.io/{self.board_id}/jobs/{external_id}"
 
-            # Extract description and requirements
-            description = None
-            requirements = []
-
-            if 'content' in job_details:
-                content = job_details['content']
-                if content:
-                    # Parse HTML content for description
-                    soup = self.parse_html(content)
-
-                    # Try to extract main content sections
-                    description_elem = soup.find(['div', 'p'], class_=lambda x: x and ('content' in x.lower() or 'description' in x.lower()))
-                    if description_elem:
-                        description = self.extract_text_from_html(description_elem)
-                    else:
-                        # Fallback to first paragraph or general content
-                        first_p = soup.find('p')
-                        if first_p:
-                            description = self.extract_text_from_html(first_p)
-                        else:
-                            description = self.extract_text_from_html(soup)
-
-            # Extract requirements if available in structured format
-            if 'questions' in job_details:
-                for question in job_details['questions']:
-                    if 'required' in question.get('label', '').lower():
-                        requirements.append(question.get('label', ''))
-
-            # Create the job posting
+            # Create the job posting with the data we have
             current_time = self.get_current_timestamp()
 
             job_posting = JobPosting(
@@ -185,8 +158,8 @@ class GreenhouseScraper(BaseScraper):
                 team=team,
                 location=location,
                 employment_type=employment_type,
-                description=description,
-                requirements=requirements if requirements else None,
+                description=None,  # We don't have detailed descriptions in the jobs list
+                requirements=None,  # We don't have requirements in the jobs list
                 job_url=job_url,
                 source_url=self.base_url,
                 first_seen=current_time,

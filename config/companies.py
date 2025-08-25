@@ -43,9 +43,9 @@ COMPANIES = [
     CompanyConfig(
         name="anthropic",
         display_name="Anthropic",
-        source=JobSource.LEVER,
-        base_url="https://jobs.lever.co",
-        job_board_url="https://jobs.lever.co/anthropic",
+        source=JobSource.GREENHOUSE,
+        base_url="https://boards.greenhouse.io",
+        job_board_url="https://boards.greenhouse.io/anthropic",
     ),
 
     # DeepMind (Google)
