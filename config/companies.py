@@ -34,9 +34,9 @@ COMPANIES = [
     CompanyConfig(
         name="openai",
         display_name="OpenAI",
-        source=JobSource.GREENHOUSE,
-        base_url="https://boards.greenhouse.io",
-        job_board_url="https://boards.greenhouse.io/openai",
+        source=JobSource.ASHBY,
+        base_url="https://jobs.ashbyhq.com",
+        job_board_url="https://jobs.ashbyhq.com/openai",
     ),
 
     # Anthropic
