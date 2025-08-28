@@ -130,18 +130,18 @@ COMPANIES = [
     CompanyConfig(
         name="characterai",
         display_name="Character.AI",
-        source=JobSource.GREENHOUSE,
-        base_url="https://boards.greenhouse.io",
-        job_board_url="https://boards.greenhouse.io/character",
+        source=JobSource.ASHBY,
+        base_url="https://jobs.ashbyhq.com",
+        job_board_url="https://character.ai/jobs",
     ),
 
     # Replit
     CompanyConfig(
         name="replit",
         display_name="Replit",
-        source=JobSource.GREENHOUSE,
-        base_url="https://boards.greenhouse.io",
-        job_board_url="https://boards.greenhouse.io/replit",
+        source=JobSource.ASHBY,
+        base_url="https://jobs.ashbyhq.com",
+        job_board_url="https://jobs.ashbyhq.com/replit",
     ),
 
     # Runway
